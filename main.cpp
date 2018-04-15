@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <iostream>
-#include <lcd.h>
 #include<thread>
 #include<string>
 #include<string.h>
@@ -27,12 +26,10 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <mutex>
-#include <wiringPi.h>
+//#include <wiringPi.h>
 #include <sys/time.h>
-#include "mainwindow.h"
 #include <time.h>
 #include <sstream>
-#include "MFRC522.h"
 #include <sstream>
 #include <iomanip>
 #include <stdio.h>
@@ -45,6 +42,8 @@
 
 #include "ClientTCP.h"
 #include "libs/NBioAPI.h"
+
+/*
 #include "libs/mysql.h"
 #include "libs/errmsg.h"
 #include "libs/driver/mysql_driver.h"
@@ -54,7 +53,7 @@
 #include "libs/cppconn/resultset.h"
 #include "libs/cppconn/statement.h"
 #include <libs/cppconn/prepared_statement.h>
-
+*/
 
 #define SQL false
 #define UI false
@@ -117,12 +116,12 @@ bool A_DR = false; // reconhecimento de digital
 
 
 void start(); // INICIA O SISTEMA
-void online(); // SISTEMA ONLINE COM A ESTAÇÃO-BASE
+void online(ClientTCP ctc); // SISTEMA ONLINE COM A ESTAÇÃO-BASE
 void offline(ClientTCP ctc); // SISTEMA OFFLINE, TENTA RECONECTAR COM A ESTAÇÃO-BASE
 void writeLog(std::string A_ID); // MANTÉM NUM LOG A ENTRADA E SAÍDA DE PESSOAS
 int sendMessage(ClientTCP ctc,std::string A_VALID); // ENVIA COMANDOS PARA A ESTAÇÃO-BASE
 int sendLog(); // ENVIA O LOG PARA A ESTAÇÃO-BASE
-void pwd_validation(std::string S_PWD); // REALIZA A VALIDAÇÃO DA SENHA
+void pwd_validation(ClientTCP ctc, std::string S_PWD); // REALIZA A VALIDAÇÃO DA SENHA
 void weight_validation(); // REALIZA A VALIDAÇÃO DO PESO
 void finger_validation(); // REALIZA A VALIDAÇÃO DA DIGITAL
 void facial_validation(); // REALIZA A VALIDAÇÃO FACIAL
@@ -137,7 +136,7 @@ std::string actualTime(); // FUNÇÃO QUE RETORNA A DATA ATUAL
 int main(int argc, char *argv[]) {
 
 
-	wiringPiSetup();
+    //wiringPiSetup();
 /*
     pinMode(P_COIL, OUTPUT);
     pinMode(P_OPT1, INPUT);
@@ -152,15 +151,13 @@ int main(int argc, char *argv[]) {
     */
 
     //thread t(start); // Apenas para interface gráfica
-    thread t2(checkRF);
-    thread cs(checkOpt);
     start();
 
 
 }
 
 void start(){
-	printIP();
+
     ClientTCP ctc(SOCKET_PORT,SOCKET_IP);
     if(ctc.getConnected()==true)
     online();
@@ -171,9 +168,8 @@ void start(){
 
 
 
-void online(){
+void online(ClientTCP ctc){
 
-    int A_STATE;
     string S_PWD;
 
 
@@ -182,7 +178,7 @@ void online(){
 
         std::getline(std::cin,S_PWD);
 
-        pwd_validation(S_PWD);
+        pwd_validation(ctc,S_PWD);
 
 }
 
@@ -193,69 +189,6 @@ void offline(ClientTCP ctc){
    ctc.rebind();
 
    online();
-}
-
-
-
-int sendMessage(ClientTCP ctc,std::string A_CMD){
-
-    //Dados a serem enviados para o servidor> Possivelmente hash 40-50 digitos para recuperacao de digital (no maximo receber 3 digitais de resposta)
-    S_VALID = ctc.sendMessageToServer(A_VALID);
-
-
-        if(S_VALID==0){
-    P_BUTTON_ACTUAL_STATE = digitalRead(P_BUTTON);
-
-    time_t start = time(0);
-    double b;
-
-    while((b=difftime(time(0),start))<=3){
-        P_BUTTON_STATE = digitalRead(P_BUTTON);
-
-        if(P_BUTTON_STATE!=P_BUTTON_ACTUAL_STATE){
-
-
-        S_VALID=1;
-
-    break;
-
-        }
-
-    }
-
-    return 1;
-}
-else if(S_VALID==1){
-
-    digitalWrite(P_PIC, LOW);
-    time_t start = time(0);
-    double b;
-    while((b=difftime(time(0),start))<=8){
-        if(S_PASS==true){
-        S_VALID = 0;
-        S_PASS=false;
-        lcdClear(LCD);
-        lcdPosition(LCD,0,0);
-        lcdPuts(LCD, "#======ONLINE======#");
-            break;
-        }
-    }
-    digitalWrite(P_PIC, HIGH);
-    S_VALID=0;
-
-    return 1;
-}
-else if(S_VALID==2){
-
-    digitalWrite(P_PIC, LOW);
-    sleep(4);
-    S_VALID=0;
-    digitalWrite(P_PIC, HIGH);
-    return 1;
-}
-
-return 0;
-
 }
 
 
