@@ -14,13 +14,40 @@ INCLUDEPATH += /usr/lib
 
 LIBS += -L/usr/local/lib -lwiringPi
 LIBS += -L/usr/local/lib -lwiringPiDev
-LIBS += -L/usr/lib -lmysqlcppconn
-LIBS += -L/usr/lib -lmysqlclient
+LIBS += -L/usr/local/lib -lbcm2835
+#LIBS += -L/usr/lib -lmysqlcppconn
+#LIBS += -L/usr/lib -lmysqlclient
 LIBS += -L/lib -lNBioBSP
 
 # Input
-HEADERS += ClientTCP.h
-SOURCES += main.cpp ClientTCP.cpp
+HEADERS += ClientTCP.h \
+    include/display.h \
+    include/displayset.h \
+    include/ssd1306.h \
+    include/lcdbw.h \
+    display.h \
+    displayset.h \
+    lcdbw.h \
+    ssd1306.h \
+    tc1602.h \
+    i2c.h \
+    client.h \
+    servertcp.h
+SOURCES += main.cpp ClientTCP.cpp \
+    displayset.cpp \
+    display.cpp \
+    lcdbw.cpp \
+    ssd1306.cpp \
+    tc1602.cpp \
+    micros.c \
+    i2c_begin.c \
+    i2c_is_connected.c \
+    i2c_lookup_device.c \
+    i2c_read.c \
+    i2c_set.c \
+    i2c_write.c \
+    client.cpp \
+    servertcp.cpp
 
 
 QMAKE_CC = gcc 
@@ -28,6 +55,7 @@ QMAKE_CFLAGS += -std=c++11
 QMAKE_CFLAGS += -lpthread
 QMAKE_CFLAGS += -lwiringPi
 QMAKE_CFLAGS += -lwiringPiDev
+QMAKE_CFLAGS += -lbcm2835
 QMAKE_CFLAGS += -lcppconn
 QMAKE_CFLAGS += -lmysqlcppconn
 QMAKE_CFLAGS += -lmysqlclient
@@ -40,6 +68,7 @@ QMAKE_CXXFLAGS += -std=c++11
 QMAKE_CXXFLAGS += -lpthread
 QMAKE_CXXFLAGS += -lwiringPi
 QMAKE_CXXFLAGS += -lwiringPiDev
+QMAKE_CFLAGS += -lbcm2835
 QMAKE_CXXFLAGS += -lcppconn
 QMAKE_CXXFLAGS += -lmysqlcppconn
 QMAKE_CXXFLAGS += -lmysqlclient
