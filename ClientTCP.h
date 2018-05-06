@@ -58,8 +58,9 @@
             *Argumento: messageSize => (int) tamanho da mensagem que será escrita no buffer de saída do socket
             *return: true se conseguiu enviar a mensagem
             */
-            
-
+            void fragment(std::string full_str,int conexao);
+            void img_fragment(int conexao);
+            int sendImageToServer();
             int  sendMessageToServer(string message);
             int sendLogToServer(string message);
             bool getConnected();

@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "client.h"
+#include "servertcp.h"
 
 #include "ClientTCP.h"
 #include "libs/NBioAPI.h"
@@ -67,8 +68,8 @@ using namespace std;
 
 // Conexão via socket
 int SERVER_PORT = 8080;
-int SOCKET_PORT = 1444;
-std::string SOCKET_IP = "192.168.25.5";
+int SOCKET_PORT = 1444;     //PORTA DO SERVIDOR
+std::string SOCKET_IP = "192.168.25.5"; //IP DO SERVIDOR
 
 
 /* Conexão via mysql procedure - estação base
@@ -79,6 +80,7 @@ std::string A_USER = "prcsport";
 std::string A_PSWD = "Caio@lindo2";
 std::string A_SCHEMA = "prcsport";
 */
+
 
 /*
 sql::Driver *driver;
@@ -151,6 +153,8 @@ void newUser();
 void setupServer();
 
 std::string actualTime(); // FUNÇÃO QUE RETORNA A DATA ATUAL
+
+using namespace std;
 
 int main(int argc, char *argv[]) {
 
@@ -534,6 +538,18 @@ void facial_validation(ClientTCP ctc){
     cout<<"Aguardando para tirar foto"<<endl;
     //Envia foto
 
+
+    /*std::ifstream fin("/home/pi/Downloads/wallpapers.jpg", std::ios::binary);
+    std::string data((std::istreambuf_iterator<char>(fin)),std::istreambuf_iterator<char>());
+    cout<<"Tamanho da imagem: "<<data.size()<<endl;*/
+
+
+
+    ctc.sendImageToServer();
+
+
+         //}
+       // }
     while(1);
 
 }

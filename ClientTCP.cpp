@@ -16,6 +16,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <string>
+#define BUFFER_SIZE 256
 
 
 
@@ -172,9 +174,11 @@ void ClientTCP::setServerPortNumber(int portN)
 
 int ClientTCP::sendMessageToServer(string message)
 {
-
+    fragment(message,sockfd);
+    /*
     int messageSize = message.size();
-    int lengthOfBytes = message.length()+1;
+    int lengthOfBytes = message.length();
+    cout<<"LENGTH: "<<lengthOfBytes<<endl;
     char * ch = new char [lengthOfBytes];
     strcpy (ch, message.c_str());
     int n = write(sockfd,ch,messageSize);
@@ -183,14 +187,14 @@ int ClientTCP::sendMessageToServer(string message)
          printf("ClientTCP::sendMessageToServer = Erro ao escrever no socket");
 
          return connected = 0;
-    }
+    }*/
     usleep(10000);
-    char buffer[1024];
-    bzero(buffer,1024);
+    char buffer[BUFFER_SIZE];
+    bzero(buffer,BUFFER_SIZE);
 
     int msgrcvd;
 
-    msgrcvd = read(sockfd, buffer, 8);
+    msgrcvd = read(sockfd, buffer, BUFFER_SIZE);
     if(msgrcvd <= 0) {
          printf("ClientTCP::sendMessageToServer = Erro ao escrever no socket");
          close(sockfd);
@@ -198,7 +202,7 @@ int ClientTCP::sendMessageToServer(string message)
          return -1;
     }
 
-
+        cout<<"PRIMEIRO PACOTE RECEBIDO!: "<<std::string(buffer)<<endl;
         usleep(10000);
         std::string packs_size = std::string(buffer);
         resposta = "";
@@ -207,8 +211,8 @@ int ClientTCP::sendMessageToServer(string message)
         cout<<"QTD DE PACKS: "<<qtd<<endl;
 
         if(qtd==1){
-
-            msgrcvd = read(sockfd, buffer, 8);
+        char nbuf[BUFFER_SIZE];
+            msgrcvd = read(sockfd, nbuf, BUFFER_SIZE);
             if(msgrcvd <= 0) {
                  printf("ClientTCP::sendMessageToServer = Erro ao ler no socket");
                  close(sockfd);
@@ -216,48 +220,150 @@ int ClientTCP::sendMessageToServer(string message)
                  return -1;
                 }
 
+         cout<<"BUFFER[O]: "<<nbuf[0]<<endl;
 
+        if(nbuf[0]=='0')  return 0;
 
-        if(buffer[0]=='0')  return 0;
-
-        else if(buffer[0]=='1')
+        else if(nbuf[0]=='1')
         return 1;
 
-        else if(buffer[0]=='2') {
+        else if(nbuf[0]=='2') {
 
             return 2;
         }
 
         else return -1;
         }
-
+    else{
     for(int packs=0;packs<qtd;packs++){
 
-        msgrcvd = read(sockfd, buffer, 8);
-        if(msgrcvd <= 0) {
+        msgrcvd = read(sockfd, buffer, BUFFER_SIZE);
+        if(msgrcvd < 0) {
              printf("ClientTCP::sendMessageToServer = Erro ao ler no socket");
              close(sockfd);
              connected = false;
              return -1;
             }
 
-        for(int i=0;i<8;i++){
+        for(int i=0;i<BUFFER_SIZE;i++){
         if(buffer[i]!=NULL){
         resposta.push_back(buffer[i]);
 
-        usleep(1000);
+        usleep(2000);
         }
-        else return 1;
+        else{
+            cout<<"i: "<<i<<"   packs: "<<packs<<endl;
+            return 1;
         }
 
+        }
+        bzero(buffer,BUFFER_SIZE);
         cout<<"Fragmento: "<<resposta<<endl;
 
     }
-    return 1;
+        }
+    return 3;
 
 
 
 }
+
+int ClientTCP::sendImageToServer()
+{
+    img_fragment(sockfd);
+    /*
+    int messageSize = message.size();
+    int lengthOfBytes = message.length();
+    cout<<"LENGTH: "<<lengthOfBytes<<endl;
+    char * ch = new char [lengthOfBytes];
+    strcpy (ch, message.c_str());
+    int n = write(sockfd,ch,messageSize);
+    if (n < 0)
+    {
+         printf("ClientTCP::sendMessageToServer = Erro ao escrever no socket");
+
+         return connected = 0;
+    }*/
+    usleep(10000);
+    char buffer[BUFFER_SIZE];
+    bzero(buffer,BUFFER_SIZE);
+
+    int msgrcvd;
+
+    msgrcvd = read(sockfd, buffer, BUFFER_SIZE);
+    if(msgrcvd <= 0) {
+         printf("ClientTCP::sendMessageToServer = Erro ao escrever no socket");
+         close(sockfd);
+         connected = false;
+         return -1;
+    }
+
+        cout<<"PRIMEIRO PACOTE RECEBIDO!: "<<std::string(buffer)<<endl;
+        usleep(10000);
+        std::string packs_size = std::string(buffer);
+        resposta = "";
+
+        unsigned long int qtd = std::stol(packs_size);
+        cout<<"QTD DE PACKS: "<<qtd<<endl;
+
+        if(qtd==1){
+        char nbuf[BUFFER_SIZE];
+            msgrcvd = read(sockfd, nbuf, BUFFER_SIZE);
+            if(msgrcvd <= 0) {
+                 printf("ClientTCP::sendMessageToServer = Erro ao ler no socket");
+                 close(sockfd);
+                 connected = false;
+                 return -1;
+                }
+
+         cout<<"BUFFER[O]: "<<nbuf[0]<<endl;
+
+        if(nbuf[0]=='0')  return 0;
+
+        else if(nbuf[0]=='1')
+        return 1;
+
+        else if(nbuf[0]=='2') {
+
+            return 2;
+        }
+
+        else return -1;
+        }
+    else{
+    for(int packs=0;packs<qtd;packs++){
+
+        msgrcvd = read(sockfd, buffer, BUFFER_SIZE);
+        if(msgrcvd < 0) {
+             printf("ClientTCP::sendMessageToServer = Erro ao ler no socket");
+             close(sockfd);
+             connected = false;
+             return -1;
+            }
+
+        for(int i=0;i<BUFFER_SIZE;i++){
+        if(buffer[i]!=NULL){
+        resposta.push_back(buffer[i]);
+
+        usleep(2000);
+        }
+        else{
+            cout<<"i: "<<i<<"   packs: "<<packs<<endl;
+            return 1;
+        }
+
+        }
+        bzero(buffer,BUFFER_SIZE);
+        cout<<"Fragmento: "<<resposta<<endl;
+
+    }
+        }
+    return 3;
+
+
+
+}
+
 
 int ClientTCP::sendLogToServer(string message)
 {
@@ -315,6 +421,182 @@ int ClientTCP::sendLogToServer(string message)
 
 }
 
+void ClientTCP::fragment(std::string full_str,int conexao){
+
+
+    unsigned long int len = full_str.size();//length();
+    cout<<"FULL STR LEN: "<<len<<endl;
+    unsigned long int m=10;
+    unsigned long int i=1;
+    int j=1;
+    while(true){
+    m = len/i;
+    cout<<m<<endl;
+    if(m<BUFFER_SIZE) break;
+    i++;
+
+    }
+
+    unsigned long int packs;
+    if(len%BUFFER_SIZE==0) packs = i-1;
+    else packs = i;
+    cout<<"PACKS A SEREM ENVIADOS: "<<packs<<endl;
+    char * resp = new char[BUFFER_SIZE];
+    bzero(resp,BUFFER_SIZE);
+    i =0;
+    j=0;
+    char * fstr = new char[full_str.size()];
+    //bzero(fstr, full_str.size());
+    strcpy (fstr, full_str.c_str());
+
+    std::string s = std::to_string(packs);
+    char const *pchar = s.c_str();
+    memcpy (resp,pchar,BUFFER_SIZE);
+
+    cout<<"Primeiro envio: "<<resp<<endl;
+    int p=write(conexao,resp,std::string(pchar).size());
+    if(p<0) exit(1);
+    usleep(10000);
+    cout<<fstr<<endl;
+    cout<<"FULL STRING: "<<full_str<<endl;
+    for(int n=0;n<packs;n++)
+    {
+        resp = new char[BUFFER_SIZE];
+        int aux = i;
+        for (i=aux; i<aux+BUFFER_SIZE;i++){
+            if(fstr[i]!=NULL){
+            resp[j]=fstr[i];
+            j++;
+            }
+            else {
+                break;
+                //resp[j]=' ';break;
+                //j++;
+            }
+        }
+
+
+                char send[j];
+                for(int h=0;h<j;h++)
+                send[h]=resp[h];
+        cout<<"Enviando isto: "<<send<<endl;
+        cout<<"Tamanho: "<<sizeof(send)<<endl;
+        int p=write(conexao,send,sizeof(send)); //sizeof(resp)+1
+        if (p < 0) break;
+        usleep(15000);
+        j=0;
+        delete [] resp;
+
+    }
+
+
+}
+
+void ClientTCP::img_fragment(int conexao){
+
+    FILE * file_to_send;
+    int ch;
+
+        //char remoteFILE[4096];
+        file_to_send = fopen ("/home/pi/Downloads/wallpapers.jpg","r");
+        if(!file_to_send) {
+            printf("Error opening file\n");
+            //close(socketDESC);
+            return;
+            }
+        else {
+        long fileSIZE;
+        fseek (file_to_send, 0, SEEK_END);
+        fileSIZE =ftell (file_to_send);
+        rewind(file_to_send);
+
+        char toSEND[fileSIZE];
+        //sprintf(remoteFILE,"FBEGIN:%s:%d\r\n", rfile, fileSIZE);
+        //send(socketDESC, remoteFILE, sizeof(remoteFILE), 0);
+
+        unsigned long int d=0;
+        while((ch=getc(file_to_send))!=EOF){
+            toSEND[d] = ch;
+            d++;
+        }
+
+    unsigned long int len = d;//full_str.size();//length();
+    cout<<"FULL STR LEN: "<<len<<endl;
+    unsigned long int m=10;
+    unsigned long int i=1;
+    int j=1;
+    while(true){
+    m = len/i;
+    cout<<m<<endl;
+    if(m<BUFFER_SIZE) break;
+    i++;
+
+    }
+
+    unsigned long int packs = fileSIZE;
+    //if(len%BUFFER_SIZE==0) packs = i-1;
+    //else packs = i;
+    cout<<"PACKS A SEREM ENVIADOS: "<<packs<<endl;
+    char * resp = new char[BUFFER_SIZE];
+    bzero(resp,BUFFER_SIZE);
+    i =0;
+    j=0;
+    //char * fstr = new char[full_str.size()];
+    //bzero(fstr, full_str.size());
+    //strcpy (fstr, full_str.c_str());
+
+    std::string s = std::to_string(packs);
+    char const *pchar = s.c_str();
+    memcpy (resp,pchar,BUFFER_SIZE);
+
+    cout<<"Primeiro envio(Tamanho de BYTES) = "<<resp<<endl;
+    int p=write(conexao,resp,std::string(pchar).size());
+    if(p<0) exit(1);
+    usleep(10000);
+    //cout<<fstr<<endl;
+    //cout<<"FULL STRING: "<<full_str<<endl;
+    for(int n=0;n<packs;n++)
+    {
+        //send = new char[1];
+        //int aux = i;
+        //for (i=aux; i<aux+1;i++){
+            //if(fstr[i]!=NULL)
+            /*if(i<d){
+            resp[j]=toSEND[i];//fstr[i];
+            j++;
+            }
+            else {
+                break;
+                //resp[j]=' ';break;
+                //j++;
+            }
+        }
+
+
+                char send[j];
+                for(int h=0;h<j;h++)
+                send[h]=resp[h];
+        cout<<"Enviando isto: "<<send<<endl;
+        cout<<"Tamanho: "<<sizeof(send)<<endl;
+        int p=write(conexao,send,sizeof(send)); //sizeof(resp)+1
+        if (p < 0) break;
+        usleep(15000);
+        j=0;
+        delete [] resp;
+        */
+            char send[1];
+            send[0] = toSEND[n];
+
+            int p=write(conexao,send,1); //sizeof(resp)+1
+            if (p < 0) break;
+            cout<<100*n/packs<<"% Completo"<<endl;
+            //usleep(2000);
+    }
+    cout<<"IMAGEM ENVIADA"<<endl;
+
+}
+
+}
 
 ///------------------------------------------------------------------------------------------------------
 bool ClientTCP::getConnected()
