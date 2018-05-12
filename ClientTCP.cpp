@@ -17,7 +17,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <string>
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 1024
+#define SLEEP_TIME 15000
 
 
 
@@ -174,6 +175,7 @@ void ClientTCP::setServerPortNumber(int portN)
 
 int ClientTCP::sendMessageToServer(string message)
 {
+    usleep(SLEEP_TIME);
     fragment(message,sockfd);
     /*
     int messageSize = message.size();
@@ -188,7 +190,7 @@ int ClientTCP::sendMessageToServer(string message)
 
          return connected = 0;
     }*/
-    usleep(10000);
+    usleep(SLEEP_TIME);
     char buffer[BUFFER_SIZE];
     bzero(buffer,BUFFER_SIZE);
 
@@ -203,7 +205,7 @@ int ClientTCP::sendMessageToServer(string message)
     }
 
         cout<<"PRIMEIRO PACOTE RECEBIDO!: "<<std::string(buffer)<<endl;
-        usleep(10000);
+        usleep(SLEEP_TIME);
         std::string packs_size = std::string(buffer);
         resposta = "";
 
@@ -249,7 +251,6 @@ int ClientTCP::sendMessageToServer(string message)
         if(buffer[i]!=NULL){
         resposta.push_back(buffer[i]);
 
-        usleep(2000);
         }
         else{
             cout<<"i: "<<i<<"   packs: "<<packs<<endl;
@@ -259,7 +260,7 @@ int ClientTCP::sendMessageToServer(string message)
         }
         bzero(buffer,BUFFER_SIZE);
         cout<<"Fragmento: "<<resposta<<endl;
-
+    usleep(SLEEP_TIME);
     }
         }
     return 3;
@@ -268,9 +269,10 @@ int ClientTCP::sendMessageToServer(string message)
 
 }
 
-int ClientTCP::sendImageToServer()
+int ClientTCP::sendImageToServer(char* toSEND,unsigned long int tambytes)
 {
-    img_fragment(sockfd);
+    usleep(SLEEP_TIME);
+    img_fragment(toSEND,tambytes,sockfd);
     /*
     int messageSize = message.size();
     int lengthOfBytes = message.length();
@@ -284,7 +286,7 @@ int ClientTCP::sendImageToServer()
 
          return connected = 0;
     }*/
-    usleep(10000);
+    usleep(SLEEP_TIME);
     char buffer[BUFFER_SIZE];
     bzero(buffer,BUFFER_SIZE);
 
@@ -299,7 +301,7 @@ int ClientTCP::sendImageToServer()
     }
 
         cout<<"PRIMEIRO PACOTE RECEBIDO!: "<<std::string(buffer)<<endl;
-        usleep(10000);
+        usleep(SLEEP_TIME);
         std::string packs_size = std::string(buffer);
         resposta = "";
 
@@ -331,6 +333,7 @@ int ClientTCP::sendImageToServer()
         else return -1;
         }
     else{
+            int bytes=0;
     for(int packs=0;packs<qtd;packs++){
 
         msgrcvd = read(sockfd, buffer, BUFFER_SIZE);
@@ -342,10 +345,9 @@ int ClientTCP::sendImageToServer()
             }
 
         for(int i=0;i<BUFFER_SIZE;i++){
-        if(buffer[i]!=NULL){
+        if(bytes<qtd){//buffer[i]!=NULL){
         resposta.push_back(buffer[i]);
-
-        usleep(2000);
+        bytes++;
         }
         else{
             cout<<"i: "<<i<<"   packs: "<<packs<<endl;
@@ -353,7 +355,9 @@ int ClientTCP::sendImageToServer()
         }
 
         }
-        bzero(buffer,BUFFER_SIZE);
+        //delete [] buffer;
+        usleep(SLEEP_TIME);
+        //bzero(buffer,BUFFER_SIZE);
         cout<<"Fragmento: "<<resposta<<endl;
 
     }
@@ -415,7 +419,7 @@ int ClientTCP::sendLogToServer(string message)
     //cout<<"Resposta do Servidor:";
     //printf("-> %c", buffer[0]);
     //cout<<resposta<<"\n";
-    usleep(10000);
+    usleep(SLEEP_TIME);
     return 0;
 
 
@@ -449,14 +453,14 @@ void ClientTCP::fragment(std::string full_str,int conexao){
     //bzero(fstr, full_str.size());
     strcpy (fstr, full_str.c_str());
 
-    std::string s = std::to_string(packs);
+    std::string s = std::to_string(len);//packs);
     char const *pchar = s.c_str();
     memcpy (resp,pchar,BUFFER_SIZE);
 
     cout<<"Primeiro envio: "<<resp<<endl;
     int p=write(conexao,resp,std::string(pchar).size());
     if(p<0) exit(1);
-    usleep(10000);
+    usleep(SLEEP_TIME);
     cout<<fstr<<endl;
     cout<<"FULL STRING: "<<full_str<<endl;
     for(int n=0;n<packs;n++)
@@ -483,60 +487,32 @@ void ClientTCP::fragment(std::string full_str,int conexao){
         cout<<"Tamanho: "<<sizeof(send)<<endl;
         int p=write(conexao,send,sizeof(send)); //sizeof(resp)+1
         if (p < 0) break;
-        usleep(15000);
+        usleep(SLEEP_TIME);
         j=0;
-        delete [] resp;
+        //delete [] resp;
 
     }
 
 
 }
 
-void ClientTCP::img_fragment(int conexao){
+void ClientTCP::img_fragment(char* toSEND, unsigned long int tambytes, int conexao){
 
-    FILE * file_to_send;
-    int ch;
 
-        //char remoteFILE[4096];
-        file_to_send = fopen ("/home/pi/Downloads/wallpapers.jpg","r");
-        if(!file_to_send) {
-            printf("Error opening file\n");
-            //close(socketDESC);
-            return;
-            }
-        else {
-        long fileSIZE;
-        fseek (file_to_send, 0, SEEK_END);
-        fileSIZE =ftell (file_to_send);
-        rewind(file_to_send);
 
-        char toSEND[fileSIZE];
-        //sprintf(remoteFILE,"FBEGIN:%s:%d\r\n", rfile, fileSIZE);
-        //send(socketDESC, remoteFILE, sizeof(remoteFILE), 0);
-
-        unsigned long int d=0;
-        while((ch=getc(file_to_send))!=EOF){
-            toSEND[d] = ch;
-            d++;
-        }
-
-    unsigned long int len = d;//full_str.size();//length();
+    unsigned long int len = tambytes;//full_str.size();//length();
     cout<<"FULL STR LEN: "<<len<<endl;
     unsigned long int m=10;
     unsigned long int i=1;
     int j=1;
-    while(true){
-    m = len/i;
-    cout<<m<<endl;
-    if(m<BUFFER_SIZE) break;
-    i++;
+    unsigned long int packs = 0;
+    if(tambytes%BUFFER_SIZE==0) packs = tambytes/BUFFER_SIZE;
+    else packs = tambytes/BUFFER_SIZE +1;
 
-    }
-
-    unsigned long int packs = fileSIZE;
+    //unsigned long int packs = tambytes;//fileSIZE;
     //if(len%BUFFER_SIZE==0) packs = i-1;
     //else packs = i;
-    cout<<"PACKS A SEREM ENVIADOS: "<<packs<<endl;
+    //cout<<"PACKS A SEREM ENVIADOS: "<<packs<<endl;
     char * resp = new char[BUFFER_SIZE];
     bzero(resp,BUFFER_SIZE);
     i =0;
@@ -545,16 +521,17 @@ void ClientTCP::img_fragment(int conexao){
     //bzero(fstr, full_str.size());
     //strcpy (fstr, full_str.c_str());
 
-    std::string s = std::to_string(packs);
+    std::string s = std::to_string(tambytes);
     char const *pchar = s.c_str();
     memcpy (resp,pchar,BUFFER_SIZE);
 
-    cout<<"Primeiro envio(Tamanho de BYTES) = "<<resp<<endl;
+    //cout<<"Primeiro envio(Tamanho de BYTES) = "<<resp<<endl;
     int p=write(conexao,resp,std::string(pchar).size());
     if(p<0) exit(1);
-    usleep(10000);
+    usleep(SLEEP_TIME);
     //cout<<fstr<<endl;
     //cout<<"FULL STRING: "<<full_str<<endl;
+    unsigned long int byteatual=0;
     for(int n=0;n<packs;n++)
     {
         //send = new char[1];
@@ -583,20 +560,28 @@ void ClientTCP::img_fragment(int conexao){
         usleep(15000);
         j=0;
         delete [] resp;
-        */
-            char send[1];
-            send[0] = toSEND[n];
+        */  char send[BUFFER_SIZE];
+            int bufferbyte=0;
 
-            int p=write(conexao,send,1); //sizeof(resp)+1
+            for(bufferbyte=0;bufferbyte<BUFFER_SIZE;bufferbyte++){
+            if(byteatual<tambytes){
+            send[bufferbyte] = toSEND[byteatual];
+            byteatual++;
+            }
+            else break;
+            }
+
+            int p=write(conexao,send,BUFFER_SIZE); //sizeof(resp)+1
             if (p < 0) break;
             cout<<100*n/packs<<"% Completo"<<endl;
-            //usleep(2000);
+            usleep(SLEEP_TIME);
+            //delete [] send;
     }
     cout<<"IMAGEM ENVIADA"<<endl;
 
 }
 
-}
+
 
 ///------------------------------------------------------------------------------------------------------
 bool ClientTCP::getConnected()

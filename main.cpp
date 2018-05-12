@@ -536,6 +536,7 @@ return;
 void facial_validation(ClientTCP ctc){
     //Executa procedimento para tirar foto com a raspicam
     cout<<"Aguardando para tirar foto"<<endl;
+    system("raspistill -o foto.jpg");
     //Envia foto
 
 
@@ -544,8 +545,34 @@ void facial_validation(ClientTCP ctc){
     cout<<"Tamanho da imagem: "<<data.size()<<endl;*/
 
 
+    FILE * file_to_send;
+    int ch;
 
-    ctc.sendImageToServer();
+        //char remoteFILE[4096];
+        file_to_send = fopen ("/home/pi/build-SafePlace-Qt_4_8_7_in_PATH_qt4_temporary-Debug/foto.jpg","r");
+        if(!file_to_send) {
+            printf("Error opening file\n");
+            //close(socketDESC);
+            return;
+            }
+        else {
+        long fileSIZE;
+        fseek (file_to_send, 0, SEEK_END);
+        fileSIZE =ftell (file_to_send);
+        rewind(file_to_send);
+
+        char toSEND[fileSIZE];
+        //sprintf(remoteFILE,"FBEGIN:%s:%d\r\n", rfile, fileSIZE);
+        //send(socketDESC, remoteFILE, sizeof(remoteFILE), 0);
+
+        unsigned long int tambytes=0;
+        while((ch=getc(file_to_send))!=EOF){
+            toSEND[tambytes] = ch;
+            tambytes++;
+        }
+        ctc.sendImageToServer(toSEND,tambytes);
+        system("rm foto.jpg");
+    }
 
 
          //}

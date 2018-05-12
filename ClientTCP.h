@@ -59,8 +59,8 @@
             *return: true se conseguiu enviar a mensagem
             */
             void fragment(std::string full_str,int conexao);
-            void img_fragment(int conexao);
-            int sendImageToServer();
+            void img_fragment(char* toSEND,unsigned long int tambytes, int conexao);
+            int sendImageToServer(char* toSEND,unsigned long int tambytes);
             int  sendMessageToServer(string message);
             int sendLogToServer(string message);
             bool getConnected();

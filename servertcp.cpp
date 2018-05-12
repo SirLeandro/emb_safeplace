@@ -10,12 +10,12 @@
 #include <sys/types.h>
 #include <time.h>
 #include <boost/lexical_cast.hpp>
-
+#define BUFFER_SIZE 256
 
 
 ServerTCP::ServerTCP()
 {
-    portNumber = 1234;
+    /*portNumber = 1234;
     socketfd = socket(AF_INET, SOCK_STREAM, 0); //obtém o socket do sistema
     ///AF_INET = socket que aceita endereços ipv4
     if (socketfd == -1) {
@@ -37,7 +37,7 @@ ServerTCP::ServerTCP()
 
     // Ouvindo por conexoes
     listen(socketfd, 1); //marco esse socket como passivo, que só excuta conexões e aceita no máximo 1 conexao pendentes em sua fila
-    acceptConections();
+    acceptConections();*/
 }
 ///------------------------------------------------------------------------------------------------------
 
@@ -99,7 +99,7 @@ void ServerTCP::acceptConections()
         unsigned char respostab[1024];
         while(tamanho>0)
         {
-            if ((tamanho = read(conexao, respostab, 1024)) < 0)
+            if ((tamanho = read(conexao, respostab, BUFFER_SIZE)) < 0)
             {
                 perror("Erro ao receber dados do cliente: ");
 
